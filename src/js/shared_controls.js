@@ -54,6 +54,7 @@ var CALC_STATUS = {
 };
 
 var slotHPStorage = {};
+var slotHPStorageOpp = {};
 
 function legacyStatToStat(st) {
 	switch (st) {
@@ -466,12 +467,25 @@ $(".set-selector").change(function () {
 	var pokeObj = $(this).closest(".poke-info");
 	var prevFullSetName = $(this).data("prevVal") || "";
 	var prevPokemonName = prevFullSetName ? prevFullSetName.substring(0, prevFullSetName.indexOf(" (")) : "";
-	if (prevPokemonName && $("#slotHpMemory").is(":checked") && pokeObj.prop("id") === "p1") {
+	if (prevPokemonName && pokeObj.prop("id") === "p1" && $("#slotHpMemory").is(":checked")) {
 		var curHP = ~~pokeObj.find(".current-hp").val();
 		var maxHP = ~~pokeObj.find(".max-hp").text();
-		if (curHP > 0) {
+		if (curHP >= 0) {
 			slotHPStorage[prevPokemonName] = { curHP: curHP, maxHP: ~~maxHP };
 		}
+		pokeObj.find(".current-hp").removeAttr("data-set");
+		pokeObj.find(".max-hp").removeAttr("data-prev");
+	} else if (prevPokemonName && pokeObj.prop("id") === "p2" && window._trainerSwitch) {
+		pokeObj.find(".current-hp").removeAttr("data-set");
+		pokeObj.find(".max-hp").removeAttr("data-prev");
+	} else if (prevPokemonName && pokeObj.prop("id") === "p2" && !window._trainerSwitch && $("#slotHpMemoryOpp").is(":checked")) {
+		var curHP = ~~pokeObj.find(".current-hp").val();
+		var maxHP = ~~pokeObj.find(".max-hp").text();
+		if (curHP >= 0) {
+			slotHPStorageOpp[prevPokemonName] = { curHP: curHP, maxHP: ~~maxHP };
+		}
+		pokeObj.find(".current-hp").removeAttr("data-set");
+		pokeObj.find(".max-hp").removeAttr("data-prev");
 	}
 	if ($(this).hasClass('opposing')) {
 		topPokemonIcon(fullSetName, $("#p2mon")[0]);
@@ -661,7 +675,7 @@ $(".set-selector").change(function () {
 			formeObj.hide();
 		}
 		calcHP(pokeObj);
-		if ($("#slotHpMemory").is(":checked") && pokeObj.prop("id") === "p1") {
+		if (pokeObj.prop("id") === "p1" && $("#slotHpMemory").is(":checked")) {
 			var stored = slotHPStorage[pokemonName];
 			var newMaxHP = ~~pokeObj.find(".max-hp").text();
 			if (stored && stored.maxHP === newMaxHP) {
@@ -669,6 +683,15 @@ $(".set-selector").change(function () {
 				calcPercentHP(pokeObj, newMaxHP, stored.curHP);
 			} else if (stored) {
 				delete slotHPStorage[pokemonName];
+			}
+		} else if (pokeObj.prop("id") === "p2" && !window._trainerSwitch && $("#slotHpMemoryOpp").is(":checked")) {
+			var stored = slotHPStorageOpp[pokemonName];
+			var newMaxHP = ~~pokeObj.find(".max-hp").text();
+			if (stored && stored.maxHP === newMaxHP) {
+				pokeObj.find(".current-hp").val(stored.curHP);
+				calcPercentHP(pokeObj, newMaxHP, stored.curHP);
+			} else if (stored) {
+				delete slotHPStorageOpp[pokemonName];
 			}
 		}
 		calcStats(pokeObj);
@@ -889,9 +912,10 @@ function createPokemon(pokeInfo) {
 				for (var q = 0; q < set.roles[role].moves.length; q++) {
 					var moveName = set.roles[role].moves[q];
 					if (moveNames.indexOf(moveName) === -1) moveNames.push(moveName);
-				}
-			}
 		}
+	}
+	window._trainerSwitch = false;
+}
 
 		var pokemonMoves = [];
 		for (var i = 0; i < 4; i++) {
@@ -1795,22 +1819,28 @@ function selectFirstMon() {
 }
 
 function selectTrainer(value) {
-	localStorage.setItem("lasttimetrainer", value);
-	all_poks = SETDEX_SS
-	for (const [pok_name, poks] of Object.entries(all_poks)) {
-		var pok_tr_names = Object.keys(poks)
-		var monName = pok_name;
-		if (pok_name.includes("Vivillon")) { monName = "Vivillon"; }
-		for (i in pok_tr_names) {
+	window._trainerSwitch = true;
+	slotHPStorageOpp = {};
+	try {
+		localStorage.setItem("lasttimetrainer", value);
+		all_poks = SETDEX_SS
+		for (const [pok_name, poks] of Object.entries(all_poks)) {
+			var pok_tr_names = Object.keys(poks)
+			var monName = pok_name;
+			if (pok_name.includes("Vivillon")) { monName = "Vivillon"; }
+			for (i in pok_tr_names) {
 
-			var index = (poks[pok_tr_names[i]]["index"])
-			if (index == value) {
-				var set = `${monName} (${pok_tr_names[i]})`;
-				$('.opposing').val(set);
-				$('.opposing').change();
-				$('.opposing .select2-chosen').text(set);
+				var index = (poks[pok_tr_names[i]]["index"])
+				if (index == value) {
+					var set = `${monName} (${pok_tr_names[i]})`;
+					$('.opposing').val(set);
+					$('.opposing').change();
+					$('.opposing .select2-chosen').text(set);
+				}
 			}
 		}
+	} finally {
+		window._trainerSwitch = false;
 	}
 }
 
@@ -1830,6 +1860,7 @@ function previousTrainer() {
 function resetTrainer() {
 	if (confirm(`Are you sure you want to reset? This will clear all imported sets and change your current trainer back to Younger Calvin. This cannot be undone.`)){
 		selectTrainer(1);
+		slotHPStorage = {};
 		localStorage.removeItem("customsets");
 		$(allPokemon("#importedSetsOptions")).hide();
 		loadDefaultLists();
@@ -2186,9 +2217,11 @@ $(document).ready(function () {
 	}
 	//select last trainer
 	let last = localStorage.getItem("lasttimetrainer");
-	if (last != "") {
+	if (last) {
 		selectTrainer(parseInt(last, 10));
 	};
+
+	$('.opposing').data("prevVal", $('.opposing').val());
 
 	// set crit checkboxes to align their values
 	/* Crits on the top of the screen */
