@@ -94,3 +94,4 @@ When Pokémon usage stats change and `@smogon/sets` updates:
 - Dark theme toggle
 - IP-restricted deployment (`ALLOWED_IPS` env var, `server.js`, `untrusted-site/`)
 - Changelog popup (`src/js/data/changelog.js`)
+- Per-species HP memory (player + opponent) — two toggle checkboxes in the credits, persisted via localStorage. Player saves/restores HP per species when switching party members. Opponent same mechanic but resets on trainer switch (Next/Previous/🚚). Implementation in `shared_controls.js` (`slotHPStorage`/`slotHPStorageOpp`, save/restore in `.set-selector` handler, `_trainerSwitch` guard, `data-set`/`data-prev` clear), `moveset_import.js` (clear on remove-all), and `index.template.html` (checkbox HTML). Loose notes moved to sibling `rnbcalc-notes/`.
