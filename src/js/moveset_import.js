@@ -450,6 +450,7 @@ $("#clearSets").click(function () {
 		return
 	}
 	localStorage.removeItem("customsets");
+	slotHPStorage = {};
 	$(allPokemon("#importedSetsOptions")).hide();
 	loadDefaultLists();
 	for (let zone of document.getElementsByClassName("dropzone")){

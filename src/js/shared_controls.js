@@ -53,6 +53,8 @@ var CALC_STATUS = {
 	'Frozen': 'frz'
 };
 
+var slotHPStorage = {};
+
 function legacyStatToStat(st) {
 	switch (st) {
 		case 'hp':
@@ -461,6 +463,16 @@ function sortmons(a, b) {
 $(".set-selector").change(function () {
 	window.NO_CALC = true;
 	var fullSetName = $(this).val();
+	var pokeObj = $(this).closest(".poke-info");
+	var prevFullSetName = $(this).data("prevVal") || "";
+	var prevPokemonName = prevFullSetName ? prevFullSetName.substring(0, prevFullSetName.indexOf(" (")) : "";
+	if (prevPokemonName && $("#slotHpMemory").is(":checked") && pokeObj.prop("id") === "p1") {
+		var curHP = ~~pokeObj.find(".current-hp").val();
+		var maxHP = ~~pokeObj.find(".max-hp").text();
+		if (curHP > 0) {
+			slotHPStorage[prevPokemonName] = { curHP: curHP, maxHP: ~~maxHP };
+		}
+	}
 	if ($(this).hasClass('opposing')) {
 		topPokemonIcon(fullSetName, $("#p2mon")[0]);
 		CURRENT_TRAINER_POKS = get_trainer_poks(fullSetName);
@@ -493,7 +505,6 @@ $(".set-selector").change(function () {
 	var setName = fullSetName.substring(fullSetName.indexOf("(") + 1, fullSetName.lastIndexOf(")"));
 	var pokemon = pokedex[pokemonName];
 	if (pokemon) {
-		var pokeObj = $(this).closest(".poke-info");
 		if (stickyMoves.getSelectedSide() === pokeObj.prop("id")) {
 			stickyMoves.clearStickyMove();
 		}
@@ -650,6 +661,16 @@ $(".set-selector").change(function () {
 			formeObj.hide();
 		}
 		calcHP(pokeObj);
+		if ($("#slotHpMemory").is(":checked") && pokeObj.prop("id") === "p1") {
+			var stored = slotHPStorage[pokemonName];
+			var newMaxHP = ~~pokeObj.find(".max-hp").text();
+			if (stored && stored.maxHP === newMaxHP) {
+				pokeObj.find(".current-hp").val(stored.curHP);
+				calcPercentHP(pokeObj, newMaxHP, stored.curHP);
+			} else if (stored) {
+				delete slotHPStorage[pokemonName];
+			}
+		}
 		calcStats(pokeObj);
 		abilityObj.change();
 		itemObj.change();
@@ -658,6 +679,7 @@ $(".set-selector").change(function () {
 			pokeObj.find(".gender").val("");
 		} else pokeObj.find(".gender").parent().show();
 	}
+	$(this).data("prevVal", fullSetName);
 	window.NO_CALC = false;
 });
 
