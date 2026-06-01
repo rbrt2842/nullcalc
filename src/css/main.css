@@ -700,13 +700,17 @@ body.show-crit-percentages .poke-info .crit-btn {
     margin-bottom: 3px;
 }
 
-.crit-rate-value,
-.crit-rate-sign {
-    display: inline;
+.crit-rate-value {
+    display: inline-block;
+    min-width: 4ch;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
 }
 
 .crit-rate-sign {
+    display: inline;
     font-size: 0.7em;
+    width: 1em !important;
 }
 
 /* field info */

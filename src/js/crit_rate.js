@@ -24,7 +24,6 @@ function strMatch(s, ...matches) {
 
 // TODO: one field probably works with some refactoring
 function getCritRate(attacker, defender, aField, dField, moveIndex, honorCritFlag = true) {
-	console.log(attacker, defender, aField, dField, moveIndex); // DEBUG
 	const move = attacker.moves[moveIndex];
 	const moveName = move.name;
 	const attackerNotInitialized = attacker.item === null || attacker.ability === null || attacker.name === null;

@@ -131,7 +131,6 @@ function performCalculations() {
 
 	damageResults = calculateAllMoves(gen, p1, p1field, p2, p2field);
 	if (critRateLabelsVisible() && typeof updateCritRateLabelsFromPokemon === "function") {
-		console.log("updateCritRateLabelsFromPokemon is a function"); // DEBUG
 		updateCritRateLabelsFromPokemon(p1, p2, p1field, p2field);
 	}
 	

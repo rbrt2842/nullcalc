@@ -464,6 +464,12 @@ function refreshCritRateLabels() {
 
 $(document).on("change", "#showCritPercentages", refreshCritRateLabels);
 
+$(".crit-rate").on("click", function () {
+	var suffix = this.id.substr(this.id.length - 2);
+	var $crit = $("#crit" + suffix);
+	$crit.click();
+});
+
 // auto-update move details on select
 $(".move-selector").change(function () {
 	var moveName = $(this).val();
