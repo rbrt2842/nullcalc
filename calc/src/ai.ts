@@ -1670,16 +1670,15 @@ export function generateMoveDist(damageResults: any[], fastestSide: string, aiOp
             }
 
             // Thunder Wave, Stun Spore, Glare, Nuzzle
-            const nonElectricParalyzingMoves = ["Stun Spore", "Glare"];
-            const paralyzingMoves = ["Thunder Wave", "Stun Spore", ...nonElectricParalyzingMoves];
+            const paralyzingMoves = ["Thunder Wave", "Stun Spore", "Nuzzle", "Glare"];
             if (paralyzingMoves.includes(moveName)) {
                 const hexIndex = moves.findIndex(x => x.move.name === "Hex"); // hehe inHEX more like
                 var paraIncentive = aiSlowerButFasterAfterPara || hexIndex != -1 || playerCharmedOrConfused;
 
                 if (playerHasStatusCond || 
-                    (move.type == "Electric" && (playerTypes.includes("Ground") || playerTypes.includes("Electric"))) ||
+                    (move.type == "Electric" && (playerTypes.includes("Ground"))) ||
                     (playerAbility == "Limber") ||
-                    (paralyzingMoves.includes(moveName) && playerTypes.includes("Electric")))
+                    (playerTypes.includes("Electric")))
                 {
                     moveStringsToAdd.push({
                         move: moveName,
