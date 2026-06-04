@@ -2060,8 +2060,7 @@ export function generateMoveDist(damageResults: any[], fastestSide: string, aiOp
             if (moveName == "Belly Drum") {
                 const sitrusRecovery = aiItem == "Sitrus Berry" ? Math.trunc(moves[0].attacker.stats.hp / 4) : 0;
                 const hpAfterBellyDrum = moves[0].attacker.originalCurHP - Math.trunc(moves[0].attacker.stats.hp / 2) + sitrusRecovery;
-                //The dead after belly drum check should check the AI's post-belly-drum HP if the AI is faster, or the AI's current HP if it is slower - the AI is not disincentivized from belly drum failing due to low HP
-                const aiNotDeadAfterBellyDrum = aiFaster?(playerHighestRoll < hpAfterBellyDrum):!aiDeadToPlayer;
+                const aiNotDeadAfterBellyDrum = playerHighestRoll < hpAfterBellyDrum;
                 if (aiMaxedOutAttack  || moves[0].attacker.originalCurHP - Math.trunc(moves[0].attacker.stats.hp / 2) <= 0) { // useless move
                     moveStringsToAdd.push({
                         move: moveName,
