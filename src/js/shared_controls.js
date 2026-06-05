@@ -572,7 +572,7 @@ $(".set-selector").change(function () {
 		var curHP = ~~pokeObj.find(".current-hp").val();
 		var maxHP = ~~pokeObj.find(".max-hp").text();
 		if (curHP >= 0) {
-			slotHPStorage[prevPokemonName] = { curHP: curHP, maxHP: ~~maxHP };
+			slotHPStorage[prevFullSetName] = { curHP: curHP, maxHP: ~~maxHP };
 		}
 		pokeObj.find(".current-hp").removeAttr("data-set");
 		pokeObj.find(".max-hp").removeAttr("data-prev");
@@ -583,7 +583,7 @@ $(".set-selector").change(function () {
 		var curHP = ~~pokeObj.find(".current-hp").val();
 		var maxHP = ~~pokeObj.find(".max-hp").text();
 		if (curHP >= 0) {
-			slotHPStorageOpp[prevPokemonName] = { curHP: curHP, maxHP: ~~maxHP };
+			slotHPStorageOpp[prevFullSetName] = { curHP: curHP, maxHP: ~~maxHP };
 		}
 		pokeObj.find(".current-hp").removeAttr("data-set");
 		pokeObj.find(".max-hp").removeAttr("data-prev");
@@ -777,22 +777,22 @@ $(".set-selector").change(function () {
 		}
 		calcHP(pokeObj);
 		if (pokeObj.prop("id") === "p1" && $("#slotHpMemory").is(":checked")) {
-			var stored = slotHPStorage[pokemonName];
+			var stored = slotHPStorage[fullSetName];
 			var newMaxHP = ~~pokeObj.find(".max-hp").text();
 			if (stored && stored.maxHP === newMaxHP) {
 				pokeObj.find(".current-hp").val(stored.curHP);
 				calcPercentHP(pokeObj, newMaxHP, stored.curHP);
 			} else if (stored) {
-				delete slotHPStorage[pokemonName];
+				delete slotHPStorage[fullSetName];
 			}
 		} else if (pokeObj.prop("id") === "p2" && !window._trainerSwitch && $("#slotHpMemoryOpp").is(":checked")) {
-			var stored = slotHPStorageOpp[pokemonName];
+			var stored = slotHPStorageOpp[fullSetName];
 			var newMaxHP = ~~pokeObj.find(".max-hp").text();
 			if (stored && stored.maxHP === newMaxHP) {
 				pokeObj.find(".current-hp").val(stored.curHP);
 				calcPercentHP(pokeObj, newMaxHP, stored.curHP);
 			} else if (stored) {
-				delete slotHPStorageOpp[pokemonName];
+				delete slotHPStorageOpp[fullSetName];
 			}
 		}
 		calcStats(pokeObj);
