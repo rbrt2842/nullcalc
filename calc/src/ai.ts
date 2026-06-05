@@ -1,12 +1,12 @@
-import { Result } from './result';
-import { Move } from './move';
-import { Generations, Pokemon } from '.';
-import { Field } from './field';
-import { MoveName } from './data/interface';
-import { getMoveEffectiveness } from './mechanics/util';
-import { calculateSMSSSV } from './mechanics/gen789';
+import { Generations, Pokemon } from '.'
+import { MoveName } from './data/interface'
+import { Field } from './field'
+import { calculateSMSSSV } from './mechanics/gen789'
+import { getMoveEffectiveness } from './mechanics/util'
+import { Move } from './move'
+import { Result } from './result'
 
-import * as I from './data/interface';
+import * as I from './data/interface'
 
 // interfaces
 interface KVP {
@@ -60,11 +60,11 @@ const powderMoves: string[] = [
     "Cotton Spore", "Magic Powder", "Poison Powder", "Powder", "Rage Powder", "Sleep Powder", "Spore", "Stun Spore"
 ];
 const statusApplyingMoves: string[] = [
-    "Grass Whistle", "Sleep Powder", "Lovely Kiss"
+    "Grass Whistle", "Sleep Powder", "Lovely Kiss", "Spore"
 ];
 const defrostingMoves: string[] = [
     "Burn Up", "Flame Wheel", "Flare Blitz", "Fusion Flare", "Pyro Ball", "Sacred Fire", "Scald", "Scorching Sands", "Steam Eruption"
-]
+];
 
 // move functions
 function isNamed(moveName: string, ...names: string[]) {
@@ -222,7 +222,7 @@ function getAIDeadAfterShellSmash(res: any[], playerMaxDamage: number) {
     return playerMaxDamageAfterSS >= aiCurrentHp;
 }
 
-function getMoveIsStatus(moveName: string, moveBp: number) {
+export function getMoveIsStatus(moveName: string, moveBp: number) {
     return moveBp <= 0 &&
         !isNamed(moveName, ...zeroBPButNotStatus)
 }
@@ -1670,14 +1670,15 @@ export function generateMoveDist(damageResults: any[], fastestSide: string, aiOp
             }
 
             // Thunder Wave, Stun Spore, Glare, Nuzzle
-            if (moveName == "Thunder Wave" || moveName == "Stun Spore" || moveName == "Nuzzle" || moveName == "Glare") {
+            const paralyzingMoves = ["Thunder Wave", "Stun Spore", "Nuzzle", "Glare"];
+            if (paralyzingMoves.includes(moveName)) {
                 const hexIndex = moves.findIndex(x => x.move.name === "Hex"); // hehe inHEX more like
                 var paraIncentive = aiSlowerButFasterAfterPara || hexIndex != -1 || playerCharmedOrConfused;
 
                 if (playerHasStatusCond || 
-                    (move.type == "Electric" && (playerTypes.includes("Ground") || playerTypes.includes("Electric"))) ||
+                    (move.type == "Electric" && (playerTypes.includes("Ground"))) ||
                     (playerAbility == "Limber") ||
-                    (moveName == "Glare" || moveName == "Stun Spore" && playerTypes.includes("Electric")))  // glare needs its own cause its a normal type move
+                    (playerTypes.includes("Electric")))
                 {
                     moveStringsToAdd.push({
                         move: moveName,
@@ -2060,7 +2061,8 @@ export function generateMoveDist(damageResults: any[], fastestSide: string, aiOp
             if (moveName == "Belly Drum") {
                 const sitrusRecovery = aiItem == "Sitrus Berry" ? Math.trunc(moves[0].attacker.stats.hp / 4) : 0;
                 const hpAfterBellyDrum = moves[0].attacker.originalCurHP - Math.trunc(moves[0].attacker.stats.hp / 2) + sitrusRecovery;
-                const aiNotDeadAfterBellyDrum = playerHighestRoll < hpAfterBellyDrum;
+                // If AI faster, it checks if its KO'd after belly drum + an attack. AI does not check belly drum failure case - HoopyFreud
+                const aiNotDeadAfterBellyDrum = aiFaster ? (playerHighestRoll < hpAfterBellyDrum) : !aiDeadToPlayer;
                 if (aiMaxedOutAttack  || moves[0].attacker.originalCurHP - Math.trunc(moves[0].attacker.stats.hp / 2) <= 0) { // useless move
                     moveStringsToAdd.push({
                         move: moveName,

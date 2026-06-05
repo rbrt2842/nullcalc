@@ -1,3 +1,5 @@
+var getCritRate = window.getCritRate;
+
 var zeroBPButNotStatus = ["Electro Ball", "Metal Burst", "Endeavor", "Bide",
      "Seismic Toss", "Punishment", "Flail", "Reversal", "Gyro Ball", "Magnitude", "Heat Crash",
       "Heavy Slam", "Present", "Natural Gift", "Beat Up", "Fissure", "Guillotine", "Horn Drill", "Super Fang",
@@ -249,7 +251,6 @@ $(".ability").bind("keyup change", function () {
 	} else {
 		$(this).closest(".poke-info").find(".alliesFainted").val('0');
 		$(this).closest(".poke-info").find(".alliesFainted").hide();
-
 	}
 });
 
@@ -372,6 +373,106 @@ $(".status").bind("keyup change", function () {
 });
 
 var lockerMove = "";
+
+function matchesAny(value, values) {
+	return values.indexOf(value) !== -1;
+}
+
+function getOpposingPokeInfo(pokeInfo) {
+	return pokeInfo.attr("id") === "p1" ? $("#p2") : $("#p1");
+}
+
+function formatCritRateValue(rate) {
+	if (rate === null) return "";
+	var percent = rate * 100;
+	return percent % 1 === 0 ? percent.toFixed(0) : percent.toString();
+}
+
+function critRateLabelsVisible() {
+	var $toggle = $("#showCritPercentages");
+	return !$toggle.length || $toggle.is(":checked");
+}
+
+function critRateLabelHtml(labelId) {
+	return '<span class="crit-rate" id="' + labelId + '">' +
+		'<span class="crit-rate-value"></span><span class="crit-rate-sign">%</span></span>';
+}
+
+function ensureCritRateLabelStructure($label) {
+	if (!$label.find(".crit-rate-value").length) {
+		$label.html('<span class="crit-rate-value"></span><span class="crit-rate-sign">%</span>');
+	}
+}
+
+function updateCritRateLabel(moveGroupObj, rate) {
+	var idSuffix = moveGroupObj.children(".move-crit").attr("id").substr(4);
+	updateCritRateLabelById(idSuffix, rate);
+}
+
+function updateCritRateLabelById(idSuffix, rate) {
+	if (!critRateLabelsVisible()) return;
+	var $label = $("#critRate" + idSuffix);
+	if (!$label.length) return;
+	ensureCritRateLabelStructure($label);
+	var value = formatCritRateValue(rate);
+	$label.find(".crit-rate-value").text(value);
+	$label.toggle(value !== "");
+}
+
+function updateCritRateLabelsFromPokemon(p1, p2, p1field, p2field) {
+	for (var i = 0; i < 4; i++) {
+		updateCritRateLabelById("L" + (i + 1), getCritRate(p1, p2, p1field, p2field, i));
+		updateCritRateLabelById("R" + (i + 1), getCritRate(p2, p1, p2field, p1field, i));
+	}
+}
+
+function setCritCheckbox(moveGroupObj, checked, autoCrit) {
+	var crit = moveGroupObj.children(".move-crit");
+	crit.data("autoCrit", autoCrit);
+	crit.prop("checked", checked).change();
+}
+
+function ensureCritRateLabels(showCritPercentages) {
+	if (showCritPercentages) {
+		$(".move-crit").each(function () {
+			var idSuffix = this.id.substr(4);
+			var labelId = "critRate" + idSuffix;
+			if (!$("#" + labelId).length) {
+				$(this).next(".crit-btn").after(critRateLabelHtml(labelId));
+			}
+		});
+	} else {
+		$(".crit-rate").remove();
+	}
+}
+
+function populateCritRateLabels() {
+	var p1info = $("#p1");
+	var p2info = $("#p2");
+	if (!p1info.length || !p2info.length) return;
+	var p1 = createPokemon(p1info);
+	var p2 = createPokemon(p2info);
+	var p1field = createField();
+	updateCritRateLabelsFromPokemon(p1, p2, p1field, p1field.clone().swap());
+}
+
+function refreshCritRateLabels() {
+	var showCritPercentages = critRateLabelsVisible();
+	$("body").toggleClass("show-crit-percentages", showCritPercentages);
+	ensureCritRateLabels(showCritPercentages);
+	if (showCritPercentages) {
+		populateCritRateLabels();
+	}
+}
+
+$(document).on("change", "#showCritPercentages", refreshCritRateLabels);
+
+$(".crit-rate").on("click", function () {
+	var suffix = this.id.substr(this.id.length - 2);
+	var $crit = $("#crit" + suffix);
+	$crit.click();
+});
+
 // auto-update move details on select
 $(".move-selector").change(function () {
 	var moveName = $(this).val();
@@ -697,6 +798,7 @@ $(".set-selector").change(function () {
 		calcStats(pokeObj);
 		abilityObj.change();
 		itemObj.change();
+		refreshCritRateLabels();
 		if (pokemon.gender === "N") {
 			pokeObj.find(".gender").parent().hide();
 			pokeObj.find(".gender").val("");
@@ -2171,6 +2273,10 @@ function showChangelog() {
 	$('#changelog-overlay').fadeIn(200);
 }
 
+function showCredits() {
+	$('#credits-overlay').fadeIn(150);
+}
+
 function showMassExport() {
 	$('#massExport-overlay').fadeIn(200);
 }
@@ -2194,6 +2300,7 @@ $(document).ready(function () {
 	});
 	$(".set-selector").val(getFirstValidSetOption().id);
 	$(".set-selector").change();
+	refreshCritRateLabels();
 	$(".terrain-trigger").bind("change keyup", getTerrainEffects);
 	$("#previous-trainer").click(previousTrainer);
 	$("#next-trainer").click(nextTrainer);
@@ -2263,6 +2370,10 @@ $(document).ready(function () {
       	showChangelog();
     });
 
+	$('#show-credits').on('click', function () {
+      	showCredits();
+    });
+
     $('#changelog-close, #changelog-overlay').on('click', function (e) {
       if (e.target.id === 'changelog-close' || e.target.id === 'changelog-overlay') {
         $('#changelog-overlay').fadeOut(200);
@@ -2275,6 +2386,12 @@ $(document).ready(function () {
     $('#massExport-close, #massExport-overlay').on('click', function (e) {
       if (e.target.id === 'massExport-close' || e.target.id === 'massExport-overlay') {
         $('#massExport-overlay').fadeOut(200);
+      }
+    });
+
+	$('#credits-close, #credits-overlay').on('click', function (e) {
+      if (e.target.id === 'credits-close' || e.target.id === 'credits-overlay') {
+        $('#credits-overlay').fadeOut(200);
       }
     });
 });

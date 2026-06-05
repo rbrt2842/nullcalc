@@ -130,6 +130,10 @@ function performCalculations() {
 	var p2field = p1field.clone().swap();
 
 	damageResults = calculateAllMoves(gen, p1, p1field, p2, p2field);
+	if (critRateLabelsVisible() && typeof updateCritRateLabelsFromPokemon === "function") {
+		updateCritRateLabelsFromPokemon(p1, p2, p1field, p2field);
+	}
+	
 	p1 = damageResults[0][0].attacker;
 	p2 = damageResults[1][0].attacker;
 	var battling = [p1, p2];
