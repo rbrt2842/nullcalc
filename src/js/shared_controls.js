@@ -57,6 +57,68 @@ var CALC_STATUS = {
 
 var slotHPStorage = {};
 var slotHPStorageOpp = {};
+var slotHPStorageP2 = {};
+var slotHPStorageO2 = {};
+
+var TAG_PARTNERS = {
+  "Aqua Leader Archie [Boss]": "Pokemon Trainer Chelle",
+  "Space Center Tag (Leader Maxie & Admin Tabitha)": "Pokemon Trainer Steven"
+};
+
+function getBattleType(trainerName) {
+  if (trainerName.indexOf('Double') !== -1) return 'doubles';
+  if (trainerName.indexOf('Tag') !== -1) return 'tag';
+  if (trainerName.indexOf(' & ') !== -1) return 'doubles';
+  if (TAG_PARTNERS[trainerName] !== undefined) return 'tag';
+  return 'singles';
+}
+
+function loadTagPartner(trainerName) {
+  var partnerName = TAG_PARTNERS[trainerName];
+  if (!partnerName) {
+    $('.tag-partner').hide();
+    return;
+  }
+  var monsHtml = '';
+  for (var i = 0; i < TR_NAMES.length; i++) {
+    var entry = TR_NAMES[i];
+    var parts = entry.split(' (');
+    if (parts.length < 2) continue;
+    var monName = parts[0].split(']')[1];
+    var trName = parts[1].substring(0, parts[1].length - 1);
+    if (trName !== partnerName) continue;
+    var setData = getSetDataFromEntry(entry);
+    if (!setData) continue;
+    var spriteName = monName;
+    if (monName == 'Zygarde-10%') spriteName = 'Zygarde-10%25';
+    if (monName.includes('Vivillon')) spriteName = 'Vivillon';
+    monsHtml += '<div class="tag-partner-mon">';
+    monsHtml += '<img src="https://raw.githubusercontent.com/May8th1995/sprites/master/' + spriteName + '.png" class="trainer-pok" style="width:40px;height:40px">';
+    monsHtml += '<strong>' + monName + '</strong>';
+    monsHtml += ' Lv.' + setData.level;
+    monsHtml += '<br>' + setData.ability;
+    monsHtml += ' @ ' + setData.item;
+    monsHtml += '<br>HP: <input type="number" class="current-hp" value="' + setData.level * 10 + '" min="0" style="width:50px"> / <span class="max-hp">' + setData.level * 10 + '</span>';
+    monsHtml += '<br><em>' + (setData.moves || []).join(', ') + '</em>';
+    monsHtml += '</div>';
+  }
+  if (monsHtml) {
+    $('#tag-partner-mons').html(monsHtml);
+    $('.tag-partner').show();
+  } else {
+    $('.tag-partner').hide();
+  }
+}
+
+function getSetDataFromEntry(entry) {
+  var parts = entry.split(' (');
+  if (parts.length < 2) return null;
+  var monName = parts[0].split(']')[1];
+  var trName = parts[1].substring(0, parts[1].length - 1);
+  var poks = SETDEX_SS[monName];
+  if (!poks) return null;
+  return poks[trName] || null;
+}
 
 function legacyStatToStat(st) {
 	switch (st) {
@@ -587,10 +649,36 @@ $(".set-selector").change(function () {
 		}
 		pokeObj.find(".current-hp").removeAttr("data-set");
 		pokeObj.find(".max-hp").removeAttr("data-prev");
+	} else if (prevPokemonName && pokeObj.prop("id") === "p3" && $("#slotHpMemoryP2").is(":checked")) {
+		var curHP = ~~pokeObj.find(".current-hp").val();
+		var maxHP = ~~pokeObj.find(".max-hp").text();
+		if (curHP >= 0) {
+			slotHPStorageP2[prevFullSetName] = { curHP: curHP, maxHP: ~~maxHP };
+		}
+		pokeObj.find(".current-hp").removeAttr("data-set");
+		pokeObj.find(".max-hp").removeAttr("data-prev");
+	} else if (prevPokemonName && pokeObj.prop("id") === "p4" && !window._trainerSwitch && $("#slotHpMemoryO2").is(":checked")) {
+		var curHP = ~~pokeObj.find(".current-hp").val();
+		var maxHP = ~~pokeObj.find(".max-hp").text();
+		if (curHP >= 0) {
+			slotHPStorageO2[prevFullSetName] = { curHP: curHP, maxHP: ~~maxHP };
+		}
+		pokeObj.find(".current-hp").removeAttr("data-set");
+		pokeObj.find(".max-hp").removeAttr("data-prev");
 	}
 	if ($(this).hasClass('opposing')) {
 		topPokemonIcon(fullSetName, $("#p2mon")[0]);
 		CURRENT_TRAINER_POKS = get_trainer_poks(fullSetName);
+		var battleType = getBattleType(window.CURRENT_TRAINER);
+		if (battleType === 'doubles') {
+			$('#doubles-format').prop('checked', true).change();
+		} else if (battleType === 'tag') {
+			$('#doubles-format').prop('checked', true).change();
+			loadTagPartner(window.CURRENT_TRAINER);
+		} else {
+			$('#singles-format').prop('checked', true).change();
+			$('.tag-partner').hide();
+		}
 		var next_poks = CURRENT_TRAINER_POKS.sort(sortmons);
 
 		var trpok_html = ""
@@ -793,6 +881,24 @@ $(".set-selector").change(function () {
 				calcPercentHP(pokeObj, newMaxHP, stored.curHP);
 			} else if (stored) {
 				delete slotHPStorageOpp[fullSetName];
+			}
+		} else if (pokeObj.prop("id") === "p3" && $("#slotHpMemoryP2").is(":checked")) {
+			var stored = slotHPStorageP2[fullSetName];
+			var newMaxHP = ~~pokeObj.find(".max-hp").text();
+			if (stored && stored.maxHP === newMaxHP) {
+				pokeObj.find(".current-hp").val(stored.curHP);
+				calcPercentHP(pokeObj, newMaxHP, stored.curHP);
+			} else if (stored) {
+				delete slotHPStorageP2[fullSetName];
+			}
+		} else if (pokeObj.prop("id") === "p4" && !window._trainerSwitch && $("#slotHpMemoryO2").is(":checked")) {
+			var stored = slotHPStorageO2[fullSetName];
+			var newMaxHP = ~~pokeObj.find(".max-hp").text();
+			if (stored && stored.maxHP === newMaxHP) {
+				pokeObj.find(".current-hp").val(stored.curHP);
+				calcPercentHP(pokeObj, newMaxHP, stored.curHP);
+			} else if (stored) {
+				delete slotHPStorageO2[fullSetName];
 			}
 		}
 		calcStats(pokeObj);
@@ -1128,6 +1234,8 @@ function getMoveDetails(moveInfo, species, ability, item, useMax) {
 		type: moveInfo.find(".move-type").val()
 	};
 	if (gen >= 4) overrides.category = moveInfo.find(".move-cat").val();
+	var moveTarget = moveInfo.find(".move-target").val();
+	if (moveTarget) overrides.target = moveTarget;
 	return new calc.Move(gen, moveName, {
 		ability: ability, item: item, useZ: isZMove, species: species, isCrit: isCrit, hits: hits,
 		timesUsed: timesUsed, timesUsedWithMetronome: timesUsedWithMetronome, overrides: overrides, useMax: useMax
@@ -1923,6 +2031,7 @@ function selectFirstMon() {
 function selectTrainer(value) {
 	window._trainerSwitch = true;
 	slotHPStorageOpp = {};
+	slotHPStorageO2 = {};
 	try {
 		localStorage.setItem("lasttimetrainer", value);
 		all_poks = SETDEX_SS
@@ -1963,6 +2072,7 @@ function resetTrainer() {
 	if (confirm(`Are you sure you want to reset? This will clear all imported sets and change your current trainer back to Younger Calvin. This cannot be undone.`)){
 		selectTrainer(1);
 		slotHPStorage = {};
+		slotHPStorageP2 = {};
 		localStorage.removeItem("customsets");
 		$(allPokemon("#importedSetsOptions")).hide();
 		loadDefaultLists();

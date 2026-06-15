@@ -1400,3 +1400,25 @@ body.rc-selecting-target .trainer-pok-opposing {
     background-position-y:1em;
   }
 }
+
+.tag-partner-mon {
+  display: inline-block;
+  width: 30%;
+  padding: 8px;
+  margin: 4px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 12px;
+  vertical-align: top;
+  background: #f9f9f9;
+}
+
+.tag-partner-mon img {
+  display: block;
+  margin: 0 auto 4px;
+}
+
+.tag-partner-mon .current-hp {
+  width: 50px;
+}

@@ -153,69 +153,94 @@ The feature reads from `slotHPStorageOpp` (per-species HP memory for opponent).
 Without it, bench mons are assumed at full HP, making OHKO checks and damage %
 comparisons inaccurate. `slotHPStorageOpp` → `getSwitchInDist()` → UI display.
 
-## Doubles support (future, low priority)
+## Doubles support
 
-Run and Bun has mixed battle types: standard singles, doubles, tag battles (2v1),
-and 3-mon battles. The calc engine already handles doubles mechanics (spread
-damage reduction, screen modifiers, Helping Hand, Friend Guard, Battery, Power
-Spot, Flower Gift, etc.) — the gaps are in the UI, AI, and trainer data.
+Run and Bun has doubles (2v2, 6 mons each) and tag battles (2v1 with an AI
+ally, 3 mons each). The calc engine already handles doubles mechanics (spread
+damage reduction, screen modifiers, Helping Hand, Friend Guard, etc.) — the
+gaps that have been addressed are in the UI, AI, and battle-type inference.
 
-### Trainer data annotation
+### Battle type inference (`src/js/shared_controls.js`)
 
-Trainer sets are in `src/js/data/sets/gen8.js` (the `SETDEX_SS` object). Currently
-there's no `battleType` field — doubles trainers are identified by a `"Double"`
-suffix convention (e.g., `"Elite Four GlaciaDouble"`). Each trainer entry would
-need a battle type flag:
+No manual `battleType` field is needed. A `getBattleType(trainerName)` function
+infers the format at runtime based on naming conventions:
 
+| Pattern | Type | Example |
+|---------|------|---------|
+| `endsWith('Double')` | doubles | `"Elite Four GlaciaDouble"` |
+| `includes(' & ')` | doubles | `"Parasol Lady Madeline & Camper Lawrence"` |
+| `includes('Tag')` | tag | `"Space Center Tag (Leader Maxie & Admin Tabitha)"` |
+| `TAG_PARTNERS[trainerName]` | tag | `"Aqua Leader Archie [Boss]"` → Chelle |
+| else | singles | `"Youngster Calvin"` |
+
+A `TAG_PARTNERS` lookup maps boss trainers to their AI ally partner:
 ```js
-"battleType": "singles" | "doubles" | "tag" | "3mon"
+var TAG_PARTNERS = {
+  "Aqua Leader Archie [Boss]": "Pokemon Trainer Chelle",
+  "Space Center Tag (Leader Maxie & Admin Tabitha)": "Pokemon Trainer Steven"
+};
 ```
 
-Would be added to the species-level entries (e.g. one per trainer name) or
-derived from a new lookup. When battle type is set, the Singles/Doubles format
-toggle in the UI would auto-select instead of requiring manual toggle.
+When a trainer is selected, the format radio button auto-sets to Singles or
+Doubles based on the inferred type.
 
-### Tag partner mini-panel
+### Tag partner mini-panel (`src/index.template.html`, `src/js/shared_controls.js`)
 
-Instead of full second Pokemon panels (p3/p4), add a compact "Tag Partner"
-dropdown under each team section (PKCalc-style). Shows a simplified Pokemon
-selector with its own HP field and move controls. Visible when battle type
-isn't `"singles"`. In 3-mon battles, bench is limited to 3 slots.
+A compact `.tag-partner` panel appears below p2 when a tag battle trainer is
+selected. It shows the AI ally's 3 Pokémon with:
+- Species icon + name
+- Level, ability, item
+- 4 move names (read-only)
+- Current HP input field
 
-### Move targeting (doubles)
+The panel is auto-populated from `SETDEX_SS` data and hidden for non-tag
+trainers. Partner HP memory is supported via `slotHPStorageP2` / `slotHPStorageO2`.
 
-Each move row needs a target picker in doubles mode:
-- Adjacent foe (single target)
-- Opposite adjacent foe (other opponent)
-- Ally
-- Both adjacent foes (spread)
+### Move targeting (`src/index.template.html`, `src/js/shared_controls.js`)
 
-The calc engine already supports `move.target` types (`adjacentFoe`,
-`allAdjacentFoes`, `adjacentAlly`, etc.) — just needs UI wiring to set the
-right target on the Move object before calculation.
+Each move row (p1 and p2) has a target dropdown with `format-specific doubles`
+class — only visible in Doubles mode:
+
+- **Foe** (`adjacentFoe`) — single adjacent opponent
+- **Both** (`allAdjacentFoes`) — both opponents (spread)
+- **Ally** (`adjacentAlly`) — ally Pokémon
+- **Ally/Self** (`adjacentAllyOrSelf`)
+
+`getMoveDetails()` reads the value and passes it as `overrides.target` to the
+`calc.Move` constructor.
 
 ### HP memory (4-slot)
 
-Expand from 2 slots (`slotHPStorage` / `slotHPStorageOpp`) to 4:
-- `slotHPStorageP1` — Player's primary
-- `slotHPStorageP2` — Player's partner
-- `slotHPStorageO1` — Opponent's primary
-- `slotHPStorageO2` — Opponent's partner
+Expanded from 2 to 4 storage slots:
 
-Values are keyed by full set name, same as current implementation.
+| Slot | Variable | Checkbox |
+|------|----------|----------|
+| Player's primary | `slotHPStorage` | `#slotHpMemory` |
+| Opponent's primary | `slotHPStorageOpp` | `#slotHpMemoryOpp` |
+| Player's ally partner | `slotHPStorageP2` | `#slotHpMemoryP2` |
+| Opponent's partner | `slotHPStorageO2` | `#slotHpMemoryO2` |
+
+Keys use the same full-set-name format. Save/restore wired for `#p3` (player
+ally) and `#p4` (opponent ally) panels. Cleared on trainer switch/reset.
 
 ### Doubles AI (`calc/src/ai.ts`)
 
-Address ~10 existing TODO comments:
-- Spread move bonuses for Icy Wind, Electroweb
-- Helping Hand / Follow Me scoring
-- Redirect mechanics
-- Doubles-specific item/ability scoring
-- Target selection weighting
+The following doubles-specific TODO comments have been addressed:
+
+| TODO | Change |
+|------|--------|
+| Icy Wind / Electroweb +1 (line 1018) | Score bonus for spread speed reduction |
+| Snarl / Breaking Swipe +1 (line 1045) | Score bonus for spread stat reduction |
+| Protect scoring (line 1312) | `+2` in doubles |
+| Tailwind scoring (line 1381) | `+2` in doubles |
+| Trick Room scoring (line 1414) | `+2` in doubles |
+| Helping Hand / Follow Me (line 1449) | Proper scoring (6-9) instead of hardcoded -6 |
+| Hex / sleep synergy (line 1803) | `+1` in doubles |
+| Coaching (line 2125) | Proper scoring (7) instead of hardcoded -20 |
+
+All checks use `moves[0].field.gameType` to determine the current format.
 
 ### Doubles switch-in AI
 
-When one active mon faints in a multi-mon format, score the replacement
-considering both:
-- The other active mon still on the field
-- Bench mons available for the second slot
+Not yet implemented. Future work to score bench mons considering the other
+active mon still on the field.

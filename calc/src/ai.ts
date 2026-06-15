@@ -1015,11 +1015,12 @@ export function generateMoveDist(damageResults: any[], fastestSide: string, aiOp
                         rate: 1
                     });
                 }
-                // TODO: double battle +1 to Icy Wind and Electroweb
+                if (moves[0].field.gameType !== 'Singles' && (moveName == "Icy Wind" || moveName == "Electroweb")) {
+                    moveStringsToAdd[moveStringsToAdd.length - 1].score += 1;
+                }
             }
 
             // Damaging Atk/SpAtk reduction moves w/ guaranteed effect
-            // TODO: there are probably more
             // scores are additive, so these should stack with kill bonuses
             if (isNamed(moveName, "Skitter Smack", "Trop Kick", "Snarl", "Mystical Fire", "Breaking Swipe") && moveScore == 0) {
                 const affectedMoveType = moveName == "Trop Kick" || moveName == "Breaking Swipe" ? "Physical" : "Special";
@@ -1042,7 +1043,9 @@ export function generateMoveDist(damageResults: any[], fastestSide: string, aiOp
                         rate: 1
                     });
                 }
-                // TODO: double battle +1 to spread moves
+                if (moves[0].field.gameType !== 'Singles' && (moveName == "Snarl" || moveName == "Breaking Swipe")) {
+                    moveStringsToAdd[moveStringsToAdd.length - 1].score += 1;
+                }
             }
 
             // Damaging -2 SpDef reduction moves w/ guaranteed effect
@@ -1309,7 +1312,9 @@ export function generateMoveDist(damageResults: any[], fastestSide: string, aiOp
                         protectScore++;
                     }
 
-                    // TODO: doubles update
+                    if (moves[0].field.gameType !== 'Singles') {
+                        protectScore += 2;
+                    }
                     if (firstTurnOut) {
                         protectScore--;
                     }
@@ -1378,22 +1383,17 @@ export function generateMoveDist(damageResults: any[], fastestSide: string, aiOp
 
             // Tailwind
             if (moveName == "Tailwind") {
-                // TODO: update for doubles if needed
                 if (!aiHasTailwind) {
-                    if (!aiFaster) {
-                        moveStringsToAdd.push({
-                            move: moveName,
-                            score: 9,
-                            rate: 1
-                        });
-                    } else {
-                        moveStringsToAdd.push({
-                            move: moveName,
-                            score: 5,
-                            rate: 1
-                        });
+                    var tailwindScore = !aiFaster ? 9 : 5;
+                    if (moves[0].field.gameType !== 'Singles') {
+                        tailwindScore += 2;
                     }
-                } else { // useless move, tailwind is up
+                    moveStringsToAdd.push({
+                        move: moveName,
+                        score: tailwindScore,
+                        rate: 1
+                    });
+                } else {
                     moveStringsToAdd.push({
                         move: moveName,
                         score: -40,
@@ -1411,20 +1411,15 @@ export function generateMoveDist(damageResults: any[], fastestSide: string, aiOp
                         rate: 1
                     });
                 } else {
-                    // TODO: doubles update
-                    if (!aiFaster) {
-                        moveStringsToAdd.push({
-                            move: moveName,
-                            score: 10,
-                            rate: 1
-                        });
-                    } else {
-                        moveStringsToAdd.push({
-                            move: moveName,
-                            score: 5,
-                            rate: 1
-                        });
+                    var trickRoomScore = !aiFaster ? 10 : 5;
+                    if (moves[0].field.gameType !== 'Singles') {
+                        trickRoomScore += 2;
                     }
+                    moveStringsToAdd.push({
+                        move: moveName,
+                        score: trickRoomScore,
+                        rate: 1
+                    });
                 }
             }
 
@@ -1445,14 +1440,28 @@ export function generateMoveDist(damageResults: any[], fastestSide: string, aiOp
                 }
             }
 
-            // Helping Hand, Follow Me (just make it -6 since no doubles)
-            // TODO: doubles update
+            // Helping Hand, Follow Me
             if (isNamed(moveName, "Helping Hand", "Follow Me")) {
-                moveStringsToAdd.push({
-                    move: moveName,
-                    score: -6,
-                    rate: 1
-                });
+                if (moves[0].field.gameType !== 'Singles') {
+                    var hhfmScore = moveName == "Follow Me" ? 7 : 6;
+                    if (!aiFaster && !aiSeesKill) {
+                        hhfmScore += 2;
+                    }
+                    if (aiLastMonOut) {
+                        hhfmScore -= 4;
+                    }
+                    moveStringsToAdd.push({
+                        move: moveName,
+                        score: hhfmScore,
+                        rate: 1
+                    });
+                } else {
+                    moveStringsToAdd.push({
+                        move: moveName,
+                        score: -6,
+                        rate: 1
+                    });
+                }
             }
 
             // Final Gambit
@@ -1800,8 +1809,8 @@ export function generateMoveDist(damageResults: any[], fastestSide: string, aiOp
                         
                         if ((dreamEaterIndex != -1 || nightmareIndex != -1) && (snoreIndex == -1 && sleepTalkIndex == -1)) { sleepScore++; }
                         
-                        // TODO: needs update for doubles one day
-                        const hexIndex = moves.findIndex(x => x.move.name === "Hex"); // hehe inHEX more like
+                        if (moves[0].field.gameType !== 'Singles') { sleepScore++; }
+                        const hexIndex = moves.findIndex(x => x.move.name === "Hex");
                         if (hexIndex != -1) { sleepScore++; }
 
                         moveStringsToAdd.push({
@@ -2122,13 +2131,24 @@ export function generateMoveDist(damageResults: any[], fastestSide: string, aiOp
             }
 
             // Coaching
-            // TODO: doubles update
             if (moveName == "Coaching") {
-                moveStringsToAdd.push({
-                    move: moveName,
-                    score: -20,
-                    rate: 1
-                });
+                if (moves[0].field.gameType !== 'Singles') {
+                    var coachingScore = 7;
+                    if (aiLastMonOut) {
+                        coachingScore -= 5;
+                    }
+                    moveStringsToAdd.push({
+                        move: moveName,
+                        score: coachingScore,
+                        rate: 1
+                    });
+                } else {
+                    moveStringsToAdd.push({
+                        move: moveName,
+                        score: -20,
+                        rate: 1
+                    });
+                }
             }
 
             // Meteor Beam
