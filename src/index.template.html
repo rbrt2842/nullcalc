@@ -1898,6 +1898,17 @@
             </fieldset>
         </div>
     </div>
+    <div class="panel switchin-ai" style="display:none">
+        <div aria-label="switchin-ai" role="region">
+            <fieldset>
+                <legend align="center">Post-KO Switch-in AI</legend>
+                <div id="switchin-results">
+                    <em>Enable Post-KO Switch-in AI in credits and recalc.</em>
+                </div>
+                <button type="button" id="btn-recalc-switchin">Recalc Switch-in</button>
+            </fieldset>
+        </div>
+    </div>
     <script type="text/javascript">
         var linkExtension = '.template.html';
     </script>
@@ -1915,6 +1926,7 @@
     <script type="text/javascript" src="./calc/util.js?"></script>
     <script type="text/javascript" src="./calc/stats.js?"></script>
     <script type="text/javascript" src="./calc/ai.js?"></script>
+    <script type="text/javascript" src="./calc/switchAi.js?"></script>
     <script type="text/javascript" src="./calc/data/species.js?"></script>
 	<script type="text/javascript" src="./js/data/sets/gen9.js?"></script>
     <script type="text/javascript" src="./js/data/sets/gen8.js?"></script>
@@ -1953,6 +1965,7 @@
     <script type="text/javascript" src="./js/index_randoms_controls.js?"></script>
     <script type="text/javascript" src="./js/moveset_import.js?"></script>
     <script type="text/javascript" src="./js/range_compare.js?"></script>
+    <script type="text/javascript" src="./js/switchin_ai.js?"></script>
 </div>
 
 <div class="credits">Run and Bun AI %, Range Compare, and Quality of Life work done by PrincessSylmar. <br>Modified by dekzeh, ForwardFeed, Originaly Created by Honko, maintained by Austin and Kris, Special thanks to Hzla
@@ -1976,6 +1989,10 @@
         <li>
             <label class="unselectable" for="rangeCompare">Enable Range Compare</label>
             <input class="" type="checkbox" name="rangeCompare" id="rangeCompare" aria-describedby="aiOption" checked />
+        </li>
+        <li>
+            <label class="unselectable" for="switchInAI">Enable Post-KO Switch-in AI</label>
+            <input class="" type="checkbox" name="switchInAI" id="switchInAI" aria-describedby="aiOption" />
         </li>
         <li>
             <label class="unselectable" for="teamsOnTop">Box On Top</label>

@@ -202,6 +202,14 @@ function performCalculations() {
 		}
 	}
 
+	if ($("#switchInAI").is(":checked") && window.SwitchInAI && typeof window.SwitchInAI.performSwitchInCalc === "function") {
+		var aiCurHP = ~~$("#p2 .current-hp").val();
+		if (aiCurHP <= 0) {
+			window.SwitchInAI.performSwitchInCalc();
+			$(".switchin-ai").show();
+		}
+	}
+
 	if ($('.locked-move').length) {
 		bestResult = $('.locked-move');
 	} else {
@@ -450,6 +458,15 @@ $(document).ready(function () {
 	$("#rangeCompare").change(function() {
 		var rangeCompare = $(this).is(":checked");
 		updateRangeCompareVisibility(rangeCompare);
+	});
+
+	$("#switchInAI").change(function() {
+		if ($(this).is(":checked")) {
+			$(".switchin-ai").show();
+			window.SwitchInAI.performSwitchInCalc();
+		} else {
+			$(".switchin-ai").hide();
+		}
 	});
 
 	function updateRangeCompareVisibility(rangeCompare) {
