@@ -248,10 +248,9 @@ function renderHealthDistChart(healthDist) {
 	RangeCompare.lastHealthDist = $.extend(true, {}, healthDist);
 	RangeCompare.lastTotal = total;
 
-	// TODO: make this print on debug logging?
-	/* if (enableDebugLogging) {
-		console.log(healthDist);
-	} */
+	if ($('#enableDebugLogging').is(':checked')) {
+		console.log('Health distribution:', healthDist);
+	}
 
 	var ctx = document.getElementById('range-chart');
     if (RangeCompare.chart != null) {
@@ -518,7 +517,11 @@ function createMoveDisplays() {
 		var critMinRoll = Math.min(...move.critRolls);
 		var critMaxRoll = Math.max(...move.critRolls);
 
-		// TODO: show crit rate and stat stage changes (if relevant stat drops/atk raises exist) in this display
+		var critRateDisplay = '';
+		if (move.critRate != null) {
+			var critPct = (move.critRate * 100);
+			critRateDisplay = '<span class="range-move-critrate">CR: ' + (critPct % 1 === 0 ? critPct.toFixed(0) : critPct.toFixed(1)) + '%</span>';
+		}
 		var moveHtml = `
 			<div id="${id}" class="range-move" data-move-id="${id}">
 				<div class="range-move-controls">
@@ -538,6 +541,7 @@ function createMoveDisplays() {
 					<span class="range-move-name">${attackerName} ${moveName}</span>
 					<span class="range-move-damage">${minRoll}-${maxRoll}</span>
 					<span class="range-move-crit critBold">${critMinRoll}-${critMaxRoll}</span>
+					${critRateDisplay}
 				</div>
 				<div class="range-move-navigation">
 					<button id="left${id}" class="range-move-left btn-range-compare-body" title="Move left">
