@@ -147,8 +147,6 @@ export {Generations} from './data/index';
 export {toID} from './util';
 export {State} from './state';
 
-export {getSwitchInDist} from './switchAi';
-
 export {ABILITIES} from './data/abilities';
 export {ITEMS, MEGA_STONES} from './data/items';
 export {MOVES} from './data/moves';
