@@ -98,7 +98,8 @@ When Pokémon usage stats change and `@smogon/sets` updates:
 
 ## Post-KO Switch-in AI
 
-Implemented — core logic in `calc/src/switchAi.ts`, UI in `src/js/switchin_ai.js`.
+Implemented (was reverted for testing, restored in commit `3918370`). Core logic
+in `calc/src/switchAi.ts`, UI in `src/js/switchin_ai.js`.
 
 ### Calc logic (`calc/src/switchAi.ts`)
 
@@ -244,3 +245,25 @@ All checks use `moves[0].field.gameType` to determine the current format.
 
 Not yet implemented. Future work to score bench mons considering the other
 active mon still on the field.
+
+## HP inputs
+
+All HP input fields (`current-hp`, `percent-hp`) in template files
+(`index.template.html`, `randoms.template.html`, `honkalculate.template.html`)
+are now `type="number"` with `min="0"` / `step="1"` / `max="100"` (percent)
+constraints. Browser-native validation supplements the existing JavaScript
+validation in `shared_controls.js`.
+
+## Range compare improvements
+
+- Debug logging: health distribution chart data prints to console when
+  `#enableDebugLogging` is checked (`range_compare.js`).
+- Crit rate display: each move entry in the range compare panel now shows a
+  "CR: X%" label alongside damage and crit damage ranges (`range_compare.js`).
+
+## GitHub Pages
+
+Deploy workflow in `.github/workflows/pages.yml` — triggered on push to
+`per-slot-hp`. Builds with `npm install && node build` and deploys `dist/`
+via `actions/deploy-pages@v1`. Requires repo Settings > Pages > Source =
+"GitHub Actions".
