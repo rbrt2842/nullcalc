@@ -1923,6 +1923,7 @@ function selectFirstMon() {
 
 function selectTrainer(value) {
 	window._trainerSwitch = true;
+	slotHPStorage = {};
 	slotHPStorageOpp = {};
 	try {
 		localStorage.setItem("lasttimetrainer", value);
@@ -1945,6 +1946,8 @@ function selectTrainer(value) {
 	} finally {
 		window._trainerSwitch = false;
 	}
+	var p1 = $("#p1");
+	p1.find(".percent-hp").val(100).trigger("keyup");
 }
 
 function nextTrainer() {
