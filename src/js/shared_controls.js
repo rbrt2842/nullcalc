@@ -57,6 +57,8 @@ var CALC_STATUS = {
 
 var slotHPStorage = {};
 var slotHPStorageOpp = {};
+window._clickedFromParty = false;
+window._prevClickedFromParty = false;
 
 function legacyStatToStat(st) {
 	switch (st) {
@@ -567,7 +569,7 @@ $(".set-selector").change(function () {
 	var pokeObj = $(this).closest(".poke-info");
 	var prevFullSetName = $(this).data("prevVal") || "";
 	var prevPokemonName = prevFullSetName ? prevFullSetName.substring(0, prevFullSetName.indexOf(" (")) : "";
-	if (prevPokemonName && pokeObj.prop("id") === "p1" && $("#slotHpMemory").is(":checked")) {
+	if (prevPokemonName && pokeObj.prop("id") === "p1" && $("#slotHpMemory").is(":checked") && window._prevClickedFromParty) {
 		var curHP = ~~pokeObj.find(".current-hp").val();
 		var maxHP = ~~pokeObj.find(".max-hp").text();
 		if (curHP >= 0) {
@@ -775,8 +777,8 @@ $(".set-selector").change(function () {
 			formeObj.hide();
 		}
 		calcHP(pokeObj);
-		if (pokeObj.prop("id") === "p1" && $("#slotHpMemory").is(":checked")) {
-			var stored = slotHPStorage[fullSetName];
+	if (pokeObj.prop("id") === "p1" && $("#slotHpMemory").is(":checked") && window._clickedFromParty) {
+		var stored = slotHPStorage[fullSetName];
 			var newMaxHP = ~~pokeObj.find(".max-hp").text();
 			if (stored && stored.maxHP === newMaxHP) {
 				pokeObj.find(".current-hp").val(stored.curHP);
@@ -1898,6 +1900,8 @@ $(document).on('click', '.right-side', function () {
 
 $(document).on('click', '.left-side', function () {
 	var set = $(this).attr('data-id');
+	window._prevClickedFromParty = window._clickedFromParty;
+	window._clickedFromParty = $(this).closest('#team-poke-list').length > 0;
 	topPokemonIcon(set, $("#p1mon")[0])
 	$('.player').val(set);
 	$('.player').change();
@@ -2065,30 +2069,40 @@ function allowDrop(ev) {
 }
 
 var pokeDragged = null;
+function resetHpIfActive(poke) {
+	var draggedId = poke.getAttribute('data-id');
+	if (draggedId === $('.player').val()) {
+		delete slotHPStorage[draggedId];
+		$("#p1").find(".percent-hp").val(100).trigger("keyup");
+	}
+}
 function dragstart_handler(ev) {
 	pokeDragged = ev.target;
 }
 
 function drop(ev) {
 	ev.preventDefault();
+	var fromParty = pokeDragged.closest('#team-poke-list') !== null;
 	if (ev.target.classList.contains("dropzone")) {
 		pokeDragged.parentNode.removeChild(pokeDragged);
-		ev.target.appendChild(pokeDragged);	
+		ev.target.appendChild(pokeDragged);
+		if (fromParty && ev.target.id !== 'team-poke-list') {
+			resetHpIfActive(pokeDragged);
+		}
 	}
-	// if it's a pokemon
 	else if(ev.target.classList.contains("left-side")) {
-		//And if a sibling switch them
 		if(ev.target.parentNode == pokeDragged.parentNode){
-			let prev1 = ev.target.previousSibling || ev.target;
-			let prev2 = pokeDragged.previousSibling || pokeDragged;
-
+			var prev1 = ev.target.previousSibling || ev.target;
+			var prev2 = pokeDragged.previousSibling || pokeDragged;
 			prev1.after(pokeDragged);
 			prev2.after(ev.target);
 		}
-		//if not just append to the box it belongs
 		else{
-			let prev1 = ev.target.previousSibling || ev.target;
+			var prev1 = ev.target.previousSibling || ev.target;
 			prev1.after(pokeDragged);
+			if (fromParty && ev.target.closest('#team-poke-list') === null) {
+				resetHpIfActive(pokeDragged);
+			}
 		}
 	}
 	ev.target.classList.remove('over');

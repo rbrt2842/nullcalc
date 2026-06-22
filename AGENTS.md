@@ -94,7 +94,7 @@ When Pokémon usage stats change and `@smogon/sets` updates:
 - Dark theme toggle
 - IP-restricted deployment (`ALLOWED_IPS` env var, `server.js`, `untrusted-site/`)
 - Changelog popup (`src/js/data/changelog.js`)
-- Per-species HP memory (player + opponent) — two toggle checkboxes (`#slotHpMemory` / `#slotHpMemoryOpp`) in the credits, persisted via localStorage. Player saves/restores HP per species when switching party members. Opponent same mechanic but resets on trainer switch (Next/Previous/🚚). Implementation in `shared_controls.js` (`slotHPStorage`/`slotHPStorageOpp`, save/restore in `.set-selector` handler, `_trainerSwitch` guard, `data-set`/`data-prev` clear), `moveset_import.js` (clear on remove-all), and `index.template.html` (checkbox HTML).
+- Per-slot HP memory (player + opponent) — two toggle checkboxes (`#slotHpMemory` / `#slotHpMemoryOpp`) in the credits. Player HP memory is **party-only**: saves/restores HP only when switching between Pokémon in the Team (party) container (`#team-poke-list`). Pokémon in Box/Box2/Trash always load at 100% HP. Dragging the active Pokémon from party to box instantly resets its HP to 100%. Both player and opponent HP memory and visible HP reset on Next/Previous battle. Opponent uses per-slot memory normally (no box distinction). Implementation in `shared_controls.js` (`slotHPStorage`/`slotHPStorageOpp`, `_clickedFromParty`/`_prevClickedFromParty` flags in `.left-side` click handler, gated save/restore in `.set-selector` handler, `_trainerSwitch` guard, `resetHpIfActive` in drag-drop handler, `data-set`/`data-prev` clear), and `index.template.html` (checkbox HTML).
 
 ## HP inputs
 
