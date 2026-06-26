@@ -5,6 +5,7 @@ OUTPUT = "src/js/data/sets/gen9.js"
 SETS_VAR = "SETDEX_SV"
 
 entries = {}
+seen = set()
 index = 0
 current_trainer = ""
 
@@ -18,6 +19,8 @@ with open(INPUT, "r", encoding="utf-8-sig") as f:
             continue
         if "Lv." not in line:
             current_trainer = line
+            # Merge slot-based pool trainers under their base name
+            current_trainer = re.sub(r'\s+Slot\s+\d+$', '', current_trainer)
             continue
 
         # Parse: MonName Lv.XX @Item: Move1, Move2, ...  [Nature|Ability]
@@ -38,6 +41,11 @@ with open(INPUT, "r", encoding="utf-8-sig") as f:
 
         # Clean moves - filter out empties and strip whitespace
         moves = [mv.strip() for mv in moves_str.split(",") if mv.strip()]
+
+        key = (mon_name, current_trainer)
+        if key in seen:
+            continue
+        seen.add(key)
 
         index += 1
 
